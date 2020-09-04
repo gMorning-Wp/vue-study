@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id='app'>
+        {{message}}
+        <div v-bind:id="message"></div>
+        <!-- <div :id="message"></div>  -->
+        <todo-list>
+            <todo-item @delete="handleDelete" v-for="item in list" :title="item.title" :del="item.del" data-test="dd">
+                  <!-- vue2.5的语法 -->
+                <!-- <span slot="pre-slot">前置图标</span>   
+              
+                <span slot="suf-slot">后置图标</span> -->
+                    <!-- vue2.6后版本的书写方式  v-slot:pre-slot为具名插槽-->
+
+                    <!-- v-slot:pre-slot="{value}"为作用域插槽，可以理解成这是个返回组件的函数-->
+                <template  v-slot:pre-slot="{value}"> 
+                    <span>前置图标{{value}}</span>   
+                </template>
+
+                <template v-slot:suf-slot>
+                    <span >后置图标</span>   
+                </template>
+                <!-- <template>
+                    <span >默认图标</span>   
+                </template> -->
+            </todo-item>·
+        </todo-list>
+        <!-- data-test会被存放在template中的根节点li上 -->
+    </div>
+
+    <!-- 此时可以动态加载id随着message来变化 :id为其缩写方式 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        //将上面的html抽象成组件，todo-item为组件的名字。组件的名字在全局唯一
+        Vue.component('todo-item', {
+            props: {
+                title: String,
+                del: {
+                    type: Boolean,
+                    default: false
+                }
+            },
+            template: `
+                <li>
+                <slot name="pre-slot" :value="value"></slot>
+                <span v-if="!del">{{title}}</span>
+                <span v-else style="text-decoration: line-through;">{{title}}</span>
+                <slot name="suf-slot">😄</slot>
+                <slot name="default-slot">😄</slot>
+                <button v-show="!del" @click="handleClick">删除</button>
+            </li>`,
+            //data值为函数，不能为对象，因为对象为引用数据类型。导致可以容易篡改
+            data: function () {
+                return {
+                    value:Math.random()
+                }
+            },
+            methods: {
+                handleClick(){
+                    console.log('点击删除！');
+                    //click事件通过emit从子组件向父组件传递相关参数
+                    this.$emit('delete',this.title);
+                }
+            }
+        })
+
+        Vue.component('todo-list', {
+           //默认插槽
+            template: `<ul>
+              <slot></slot>
+            </ul>`,
+            data: function () {
+                return {
+                    
+                }
+            },
+           
+        })
+
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                message: 'hello world',
+                item: {
+                    title: '课程1',
+                    del: false
+                },
+                list: [{
+                            title: '课程1',
+                            del: false
+                        },
+                        {
+                            title: '课程2',
+                            del: true
+                        }
+                    ],
+            },
+            methods:{
+                handleDelete(val){
+                    console.log('handleDelte',val);
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
